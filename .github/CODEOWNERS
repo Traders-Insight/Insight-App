@@ -1,0 +1,8 @@
+# Define code owners for specific files or directories
+
+# Format: path @github-username
+
+- @Patrick-Ehimen
+  src/pages/ @frontend-team
+  src/components/ @frontend-team
+  .github/workflows/ @devops-team
