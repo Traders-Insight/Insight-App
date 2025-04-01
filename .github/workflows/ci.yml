@@ -34,7 +34,7 @@ jobs:
         run: npm run build
 
       - name: Deploy
-        run: npm run start
+        run: npm run start &
           sleep 10
           kill $!
         env:
