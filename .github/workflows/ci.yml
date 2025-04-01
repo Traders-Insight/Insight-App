@@ -35,5 +35,7 @@ jobs:
 
       - name: Deploy
         run: npm run start
+          sleep 10
+          kill $!
         env:
           NODE_ENV: production
