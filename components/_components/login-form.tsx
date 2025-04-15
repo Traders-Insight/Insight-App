@@ -2,16 +2,60 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import GoogleIcon from "@/public/svg/google-icon";
 import TwitterIcon from "@/public/svg/twitter-icon";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const router = useRouter();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.id]: e.target.value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("http://localhost:8080/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Login failed");
+
+      setShowPopup(true);
+      router.push("/app");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage("An unknown error occurred");
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -22,7 +66,7 @@ export function LoginForm() {
         <p className="text-gray-600">Login to access your InSight account</p>
       </div>
 
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm text-gray-600">
             Email
@@ -31,8 +75,14 @@ export function LoginForm() {
             id="email"
             type="email"
             placeholder="john.doe@gmail.com"
+            value={formData.email}
+            onChange={handleChange}
             className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            required
           />
+          {errorMessage && ( // Conditionally render error message
+            <p className="text-red-500 text-sm">{errorMessage}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -44,7 +94,10 @@ export function LoginForm() {
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••••••••••••••••"
+              value={formData.password}
+              onChange={handleChange}
               className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 pr-10"
+              required
             />
             <button
               type="button"
@@ -110,6 +163,15 @@ export function LoginForm() {
           </Button>
         </div>
       </div>
+      <Dialog open={showPopup} onOpenChange={setShowPopup}>
+        {/* <Dialog.Overlay /> */}
+        <DialogContent>
+          <DialogTitle>Successfully Logged-In!</DialogTitle>
+          <DialogDescription>
+            You will be redirected to your dashboard shortly.
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
